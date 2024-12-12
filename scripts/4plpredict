@@ -1,0 +1,35 @@
+# Here’s the Python code to predict the x-values from the given y-values using the fitted 4PL curve
+import numpy as np
+from scipy.optimize import curve_fit, minimize_scalar
+
+# Define the 4PL model function
+def four_pl(x, a, b, c, d):
+    return ((a - d) / (1.0 + (x / c)**b)) + d
+
+# Define the dataset
+x_data = np.array([8000, 2666.666667, 888.8888889, 296.2962963, 98.7654321, 32.9218107, 0])
+y_data = np.array([566.3, 234.3, 73.3, 23.5, 6.5, 2.5, 0])
+
+# Fit the 4PL model to the dataset
+popt, _ = curve_fit(four_pl, x_data, y_data, bounds=(0, [1000, 10, 10000, 1000]))
+
+# Function to find x for a given y
+def predict_x_for_y(y, params):
+    a, b, c, d = params
+    result = minimize_scalar(
+        lambda x: abs(four_pl(x, a, b, c, d) - y), 
+        bounds=(0, max(x_data)), 
+        method='bounded'
+    )
+    return result.x
+
+# Y-values to predict corresponding X-values for
+y_values = [5.5, 4.5, 6.5, 2, 4.8, 3.5, 3.3, 4.5, 4.3]
+
+# Predict x-values
+predicted_x_values = [predict_x_for_y(y, popt) for y in y_values]
+
+# Print the results
+print("Predicted x-values for the given y-values:")
+for y, x in zip(y_values, predicted_x_values):
+    print(f"For Y = {y}, predicted X = {x:.4f}")
